@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from lxml import etree
 
-test_url='https://missav.com/abp-611-uncensored-leak'
+test_url='https://missav.com/edrg-009'
 ob_vaults_path = r"C:\Users\Scott\OB\卡片庫\AV Collections"
 
 class MissavInfo:
@@ -24,7 +24,7 @@ class MissavInfo:
     def __str__(self):
         uncensored = True if 'uncensored-leak' in self.source_link else False
         artist_list = self.artists.split(', ')  # Assuming artists are separated by commas
-        artist_serialized = '\n  - '.join([f'[[{artist}]]' for artist in artist_list])
+        artist_serialized = '\n  - '.join([f'"[[{artist}]]"' for artist in artist_list])
         tags_serialized = '\n  - '.join(self.tags)
 
         serialized_data = \
