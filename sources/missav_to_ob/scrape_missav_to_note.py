@@ -1,12 +1,15 @@
 import os.path
+import time
 
+import cloudscraper
+from requests_html import HTML
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from lxml import etree
 
-test_url='https://missav.com/edrg-009'
+test_url='https://missav.com/dm59/cawd-044'
 ob_vaults_path = r"C:\Users\Scott\OB\卡片庫\AV Collections"
 
 class MissavInfo:
@@ -49,6 +52,17 @@ Stars:
         with open(filepath, 'w+', encoding='utf-8') as fd:
             fd.write(self.__str__())
 
+def request_page_source(url:str) -> str:
+    scraper = cloudscraper.create_scraper(delay=5, browser='chrome')
+    response = scraper.get(url)
+
+    # Check if the request was successful
+    if response.status_code != 200:
+        raise ValueError(f"Request failed with status code: {response.status_code}")
+    html = HTML(html=response.text)
+
+
+
 def get_page_source(url: str) -> str:
     options = Options()
     options.add_argument('--headless')
@@ -59,7 +73,6 @@ def get_page_source(url: str) -> str:
 
     options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
-    # dr = webdriver.Chrome(options=options)
     dr = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     dr.get(url)
     return dr.page_source
@@ -96,20 +109,18 @@ def parse_missav_info(raw: str) -> MissavInfo:
 
 
 if __name__ == "__main__":
+    # time_start = time.time()
+    # raw_html = request_page_source(test_url)
+    # print(f"{len(raw_html)=} delta {time.time() - time_start}")
+    # with open("x1.html", 'w+', encoding='utf-8') as fd:
+    #     fd.write(raw_html)
+
+    time_start = time.time()
     raw_html = get_page_source(test_url)
+    print(f"{len(raw_html)=} delta {time.time() - time_start}")
     info = parse_missav_info(raw_html)
     info.source_link = test_url
     info.write_to_file(os.path.join(ob_vaults_path, info.title + '.md'))
-
-
-
-
-# posters = tree.findall(".//div[@class='plyr__poster']")
-# for poster in posters:
-#     print(poster.get("style"))
-#
-# details = tree.findall(".//div[@x-show]")
-# print(details)
 
 
 # $x(".//H1")
@@ -119,25 +130,3 @@ if __name__ == "__main__":
 # $x("//span[contains(text(),'女優')]/../a/text()")
 # $x("//span[contains(text(),'發行商')]/../a/text()")
 # $x("//span[contains(text(),'導演')]/../a/text()")
-
-
-# # title
-# print(tree.find('.//h1').text)
-# print(tree.find('.//time').text)
-# # print(tree.find(".//div[contains(@x-show,'detail')]"))
-
-# if detail_node is not None:
-#     for tag in tree.iter():
-#         if tag.tag == 'span' and tag.text is not None:
-#             if "番號" in tag.text:
-#                 el = tag
-#                 print(tag.getparent().findall(".//span")[1].text)
-#             if "女優" in tag.text:
-#                 print(tag.getparent().find(".//a").text)
-#             if "發行商" in tag.text:
-#                 print(tag.getparent().find(".//a").text)
-#             if "導演" in tag.text:
-#                 print(tag.getparent().find(".//a").text)
-
-# poster = tree.find(".//div[@class='plyr__poster']")
-# print(poster.get("style")[23:-3])
