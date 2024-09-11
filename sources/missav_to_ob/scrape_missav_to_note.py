@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from lxml import etree
 
-test_url='https://missav.com/dm59/cawd-044'
+test_url='https://missav.com/dm25/mimk-016-uncensored-leak'
 ob_vaults_path = r"C:\Users\Scott\OB\卡片庫\AV Collections"
 
 class MissavInfo:
@@ -26,8 +26,11 @@ class MissavInfo:
 
     def __str__(self):
         uncensored = True if 'uncensored-leak' in self.source_link else False
-        artist_list = self.artists.split(', ')  # Assuming artists are separated by commas
-        artist_serialized = '\n  - '.join([f'"[[{artist}]]"' for artist in artist_list])
+        if self.artists:
+            artist_list = self.artists.split(', ')
+            artist_serialized = '\n  - '.join([f'"[[{artist}]]"' for artist in artist_list])
+        else:
+            artist_serialized = None
         tags_serialized = '\n  - '.join(self.tags)
 
         serialized_data = \
