@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from lxml import etree
 
-test_url='https://missav.com/dm25/mimk-016-uncensored-leak'
+test_url='https://missav.com/dvdes-543-uncensored-leak'
 ob_vaults_path = r"C:\Users\Scott\OB\卡片庫\AV Collections"
 
 class MissavInfo:
@@ -103,7 +103,8 @@ def parse_missav_info(raw: str) -> MissavInfo:
             if "番號" in tag.text:
                 info.serial = tag.getparent().findall(".//span")[1].text
             elif "女優" in tag.text:
-                info.artists = tag.getparent().find(".//a").text
+                actress = [a.text for a in tag.getparent().findall(".//a")]
+                info.artists = ', '.join(actress)
             elif "發行商" in tag.text:
                 info.company = tag.getparent().find(".//a").text
             elif "導演" in tag.text:
@@ -112,12 +113,6 @@ def parse_missav_info(raw: str) -> MissavInfo:
 
 
 if __name__ == "__main__":
-    # time_start = time.time()
-    # raw_html = request_page_source(test_url)
-    # print(f"{len(raw_html)=} delta {time.time() - time_start}")
-    # with open("x1.html", 'w+', encoding='utf-8') as fd:
-    #     fd.write(raw_html)
-
     time_start = time.time()
     raw_html = get_page_source(test_url)
     print(f"{len(raw_html)=} delta {time.time() - time_start}")
