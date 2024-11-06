@@ -11,7 +11,7 @@ from socks import method
 from webdriver_manager.chrome import ChromeDriverManager
 from lxml import etree
 
-test_url='https://njav.tv/zh/dm1/v/dvaj-615'
+test_url=('https://missav.com/fsdss-952-uncensored-leak')
 ob_vaults_path = r"C:\Users\Scott\OB\卡片庫\AV Collections"
 
 class AvTitleInfo:
@@ -134,6 +134,7 @@ def parse_missav_info(raw: str) -> AvTitleInfo:
         if tag.tag == 'span' and tag.text is not None:
             if "番號" in tag.text:
                 info.serial = tag.getparent().findall(".//span")[1].text
+                info.serial = info.serial.replace("-UNCENSORED-LEAK", "")
             elif "女優" in tag.text:
                 actress = [a.text for a in tag.getparent().findall(".//a")]
                 info.artists = ', '.join(actress)
