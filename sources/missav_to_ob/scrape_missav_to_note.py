@@ -5,13 +5,17 @@ import time
 import cloudscraper
 from requests_html import HTML
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 from socks import method
 from webdriver_manager.chrome import ChromeDriverManager
 from lxml import etree
 
-test_url=('https://missav.com/fsdss-952-uncensored-leak')
+test_url=('https://missav123.com/sykh-128-uncensored-leak')
 ob_vaults_path = r"C:\Users\Scott\OB\卡片庫\AV Collections"
 
 class AvTitleInfo:
@@ -145,11 +149,102 @@ def parse_missav_info(raw: str) -> AvTitleInfo:
     return info
 
 
+def lookup_javlib(serial: str) -> str:
+    # url =  "https://www.javlibrary.com/tw/vl_searchbyid.php?keyword=" + serial
+    url = 'https://www.javlibrary.com/tw/'
+
+    def get_cookies_and_user_agent(url):
+        scraper = cloudscraper.create_scraper(delay=5, browser='chrome')
+        retries = 0
+        max_retries = 3
+        delay = 5
+
+        while retries < max_retries:
+            response = scraper.get(url)
+            redirect_url = scraper.get_redirect_target(response)
+
+            if response.status_code == 200:
+                return response.content
+            elif response.status_code == 403:
+                print("Received 403 response, waiting before retrying...")
+                time.sleep(delay)
+
+                retries += 1
+            else:
+                response.raise_for_status()
+
+        if  retries == max_retries:
+            print(f"Failed to retrieve cookies and user agent after {max_retries} retries.")
+            raise TimeoutException("Failed to retrieve cookies and user agent after multiple retries.")
+
+
+
+        # response = scraper.get(url)
+        # if response.status_code != 200:
+        #     raise ValueError(f"Request failed with status code: {response.status_code}")
+
+        cookies = response.cookies.get_dict()
+        user_agent = scraper.headers['User-Agent']
+        return cookies, user_agent
+
+    cookies, user_agent = get_cookies_and_user_agent(url)
+
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-extensions')
+
+    options.add_argument(f"user-agent={user_agent}")
+
+    # options.add_argument(
+    #     "user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
+    dr = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+    dr.get(url)
+
+    # Add cookies to Selenium
+    for name, value in cookies.items():
+        dr.add_cookie({'name': name, 'value': value})
+
+    # Refresh the page to apply cookies
+    # dr.refresh()
+
+    # if 'https://www.javlibrary.com/tw/?v' not in dr.current_url:
+    #     current_url = dr.current_url
+    #     try:
+    #         WebDriverWait(dr, 10).until(lambda d: d.current_url != current_url)
+    #     except TimeoutException as e:
+    #         print(f"Timeout waiting for URL change: {e} - {dr.current_url} - {current_url}")
+
+    # print(f"Current URL: {dr.current_url}")
+
+    WebDriverWait(dr, 10).until(
+        EC.presence_of_element_located((By.ID, "idsearchbox"))
+    )
+
+    input = dr.find_element(By.ID, "idsearchbox")
+    input.send_keys(serial)
+
+    # idsearchbutton
+    submit_button = dr.find_element(By.ID, "idsearchbutton")
+    submit_button.click()
+
+    # Wait for the <div id="video_info"> element to be present
+    WebDriverWait(dr, 10).until(
+        EC.presence_of_element_located((By.ID, "video_info"))
+    )
+
+    # Once the element is present, you can proceed with further actions
+    video_info = dr.find_element(By.ID, "video_info").text
+    print(f"Video Info: {video_info}")
+
+
 if __name__ == "__main__":
     # use parser to get url option from CLI
 
     time_start = time.time()
-    if test_url.startswith('https://missav.com'):
+    if test_url.startswith(('https://missav.com', 'https://missav123.com')):
         raw_html = get_page_source(test_url, 'selenium')
         print(f"{len(raw_html)=} delta {time.time() - time_start}")
         info = parse_missav_info(raw_html)
@@ -158,6 +253,8 @@ if __name__ == "__main__":
         print(f"{len(raw_html)=} delta {time.time() - time_start}")
         info = parse_njav_info( raw_html)
     info.source_link = test_url
+
+    # lookup_javlib(info.serial)
 
     # replace  '/' with '-' in title
     filepath = info.title.replace('/', '-')
