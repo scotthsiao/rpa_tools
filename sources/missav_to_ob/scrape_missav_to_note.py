@@ -1,8 +1,10 @@
 from typing import List
 import os.path
 import time
+import re
 
 import cloudscraper
+from importlib_metadata import files
 from requests_html import HTML
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -15,8 +17,27 @@ from socks import method
 from webdriver_manager.chrome import ChromeDriverManager
 from lxml import etree
 
-test_url=('https://missav123.com/sykh-128-uncensored-leak')
+test_url=('https://missav123.com/cn/spsb-014')
 ob_vaults_path = r"C:\Users\Scott\OB\卡片庫\AV Collections"
+
+
+def sanitize_filename(filename: str, replacement: str = '_') -> str:
+    """
+    替換檔名中的特殊字元，適合於 Windows 系統存檔。
+
+    :param filename: 原始檔名
+    :param replacement: 用於替換非法字元的字元，預設為下劃線 '_'
+    :return: 清理後的檔名
+    """
+    # Windows 不允許的特殊符號
+    invalid_chars = r'[\\/:*?"<>|]'
+
+    # 將特殊字元替換為指定的替代字元
+    sanitized = re.sub(invalid_chars, replacement, filename)
+
+    # 確保結果長度不超過 255 個字元（適合單一檔名）
+    return sanitized[:255]
+
 
 class AvTitleInfo:
     def __init__(self):
@@ -136,15 +157,15 @@ def parse_missav_info(raw: str) -> AvTitleInfo:
 
     for tag in detail_node.iter():
         if tag.tag == 'span' and tag.text is not None:
-            if "番號" in tag.text:
+            if any(keyword in tag.text for keyword in ["番號", "番号"]):
                 info.serial = tag.getparent().findall(".//span")[1].text
                 info.serial = info.serial.replace("-UNCENSORED-LEAK", "")
-            elif "女優" in tag.text:
+            elif any(keyword in tag.text for keyword in ["女優", "女优"]):
                 actress = [a.text for a in tag.getparent().findall(".//a")]
                 info.artists = ', '.join(actress)
-            elif "發行商" in tag.text:
+            elif any(keyword in tag.text for keyword in ["發行商", "发行商"]):
                 info.company = tag.getparent().find(".//a").text
-            elif "導演" in tag.text:
+            elif any(keyword in tag.text for keyword in ["導演", "导演"]):
                 info.director = tag.getparent().find(".//a").text
     return info
 
@@ -244,7 +265,7 @@ if __name__ == "__main__":
     # use parser to get url option from CLI
 
     time_start = time.time()
-    if test_url.startswith(('https://missav.com', 'https://missav123.com')):
+    if test_url.startswith(('https://missav.com', 'https://missav123.com', 'https://missav.ws')):
         raw_html = get_page_source(test_url, 'selenium')
         print(f"{len(raw_html)=} delta {time.time() - time_start}")
         info = parse_missav_info(raw_html)
@@ -257,7 +278,8 @@ if __name__ == "__main__":
     # lookup_javlib(info.serial)
 
     # replace  '/' with '-' in title
-    filepath = info.title.replace('/', '-')
+    # filepath = info.title.replace('/', '-')
+    filepath = sanitize_filename(info.title[:100])
     info.write_to_file(os.path.join(ob_vaults_path, filepath + '.md'))
 
 
